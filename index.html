@@ -1325,13 +1325,13 @@
             btnAccordion.style.display = 'none';
 
             const respondida = statusQuestoes[indice] !== null;
+            let effectiveOriginalCorrectIndex; // This will hold the true original correct index for styling.
 
-            // Armazenar o índice correto original antes de embaralhar
-            const originalCorrectIndex = questaoAtual.correta;
-
-            // Criar array combinado de opções e justificativas se ainda não foi feito ou se não estamos apenas recarregando uma questão respondida
-            // A condição `!questaoAtual.opcoesEmbaralhadas` garante que o embaralhamento ocorra apenas uma vez por questão.
             if (!respondida || !questaoAtual.opcoesEmbaralhadas) {
+                // First time rendering this question OR if it was skipped and came back before answering.
+                effectiveOriginalCorrectIndex = questaoAtual.correta; // Capture true original correct index
+                questaoAtual.trueOriginalIndex = effectiveOriginalCorrectIndex; // Store it persistently on the question object
+
                 let opcoesComJustificativas = questaoAtual.opcoes.map((opcao, idx) => ({
                     opcaoTexto: opcao,
                     justificativaTexto: questaoAtual.justificativas[idx],
@@ -1339,11 +1339,16 @@
                 }));
                 shuffleArray(opcoesComJustificativas);
                 questaoAtual.opcoesEmbaralhadas = opcoesComJustificativas;
-                // Atualizar questaoAtual.correta para o novo índice da opção correta no array embaralhado
-                questaoAtual.correta = questaoAtual.opcoesEmbaralhadas.findIndex(opt => opt.originalIndex === originalCorrectIndex);
+                // Update questaoAtual.correta to the new index of the correct option in the SHUFFLED array
+                questaoAtual.correta = questaoAtual.opcoesEmbaralhadas.findIndex(opt => opt.originalIndex === effectiveOriginalCorrectIndex);
+            } else {
+                // Question has been answered or previously processed and shuffled.
+                // Retrieve the stored true original correct index.
+                effectiveOriginalCorrectIndex = questaoAtual.trueOriginalIndex;
             }
 
             const opcoesParaRenderizar = questaoAtual.opcoesEmbaralhadas;
+            // questaoAtual.correta now holds the SHUFFLED index of the correct answer.
 
             opcoesParaRenderizar.forEach((item, i) => {
                 const botao = document.createElement('button');
@@ -1352,15 +1357,15 @@
                 botao.addEventListener('click', () => validarResposta(i));
 
                 if (respondida) {
-                    // Se a questão foi respondida, aplicar estilos com base na resposta do usuário e na correção
-                    if (i === respostasUsuario[indice]) { // Opção que o usuário selecionou
+                    if (i === respostasUsuario[indice]) {
                         botao.style.backgroundImage = 'none';
                         botao.style.backgroundColor = statusQuestoes[indice] ? 'var(--verde-certo)' : 'var(--vermelho-errado)';
                         botao.style.color = 'var(--branco)';
                         botao.style.fontWeight = 'bold';
                     }
-                    // Se o usuário errou, e esta é a opção correta, destacá-la também
-                    if (item.originalIndex === originalCorrectIndex && !statusQuestoes[indice] && i !== respostasUsuario[indice]) {
+                    // Highlight the ACTUAL correct answer if the user was wrong.
+                    // Compare item's originalIndex with the consistently stored true original correct index.
+                    if (item.originalIndex === effectiveOriginalCorrectIndex && !statusQuestoes[indice] && i !== respostasUsuario[indice]) {
                         botao.style.backgroundImage = 'none';
                         botao.style.backgroundColor = 'var(--verde-certo)';
                         botao.style.color = 'var(--branco)';
@@ -1376,17 +1381,17 @@
                 elementoFeedback.classList.add(statusQuestoes[indice] ? "correto" : "errado");
 
                 const containerJustificativasInterno = painelAccordion.querySelector('.justificativa-content');
-                // Usar opcoesEmbaralhadas para mostrar justificativas na ordem em que as opções foram apresentadas
+                containerJustificativasInterno.innerHTML = ''; // Clear before adding new ones
+
                 opcoesParaRenderizar.forEach((item, i) => {
                     const letraOpcao = String.fromCharCode(65 + i);
 
                     const pJustificativa = document.createElement('p');
                     pJustificativa.classList.add('justificativa-item');
-                    // Usar item.justificativaTexto do array embaralhado
                     pJustificativa.innerHTML = `<strong>${letraOpcao})</strong> ${item.justificativaTexto}`;
 
-                    // A classe 'certa' é baseada no originalIndex
-                    if (item.originalIndex === originalCorrectIndex) {
+                    // Compare item's originalIndex with the consistently stored true original correct index.
+                    if (item.originalIndex === effectiveOriginalCorrectIndex) {
                         pJustificativa.classList.add('certa');
                     } else {
                         pJustificativa.classList.add('errada');
