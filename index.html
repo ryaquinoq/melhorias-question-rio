@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Interativo - Patologia das Neoplasias</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+        :root {
+            --cor-primaria: #f0f0f0;
+            --cor-secundaria: #ccc;
+            --cor-texto: #333;
+            --branco: #fff;
+            --azul-escuro: #003366;
+            --azul-claro: #6699cc;
+            --azul-vibrante: #007bff;
+            --verde-certo: #4CAF50;
+            --vermelho-errado: #f44336;
+            --cinza-claro: #f9f9f9;
+            --sombra: rgba(0, 0, 0, 0.1);
+            --verde-justificativa-fundo: rgba(76, 175, 80, 0.1);
+            --vermelho-justificativa-fundo: rgba(244, 67, 54, 0.1);
+        }
+
+        .animated-gradient-background {
+            background: linear-gradient(-45deg, var(--azul-claro), var(--azul-escuro), #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.08;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--cor-texto);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        .site-content {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            padding-bottom: 90px; /* Aumentado para acomodar a barra de navegação inferior com mais botões */
+        }
+
+        header {
+            background-image: linear-gradient(to bottom, var(--azul-claro), var(--azul-escuro));
+            color: var(--branco);
+            padding: 1.5em 20px;
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px var(--sombra);
+        }
+
+        .header-icon {
+            width: 32px;
+            height: 32px;
+            margin-right: 15px;
+            stroke: var(--branco);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5em; /* Ajustado para título potencialmente longo */
+        }
+
+        main {
+            background-color: var(--branco);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px var(--sombra);
+            width: 100%;
+            max-width: 700px; /* Aumentado um pouco para perguntas mais longas */
+        }
+
+        #quiz-container {
+            margin-bottom: 25px;
+        }
+
+        .pergunta {
+            font-size: 1.0em; /* Ajustado para perguntas potencialmente longas */
+            margin-bottom: 15px;
+            line-height: 1.45;
+        }
+
+        .opcoes {
+            margin-bottom: 20px;
+        }
+
+        .opcoes button {
+            display: block;
+            width: 100%;
+            padding: 10px; /* Levemente reduzido para mais texto */
+            margin-bottom: 8px; /* Levemente reduzido */
+            background-image: linear-gradient(to right, var(--azul-claro), var(--azul-escuro));
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em; /* Ajustado para opções potencialmente longas */
+            font-family: 'Montserrat', sans-serif;
+            transition: background-image 0.3s ease, background-color 0.3s ease, transform 0.2s ease-in-out;
+            text-align: left;
+            line-height: 1.3;
+        }
+
+        .opcoes button:hover:not(:disabled),
+        .question-actions button:hover:not(:disabled),
+        .navigation-buttons button:hover:not(:disabled) {
+            background-image: none;
+            background-color: var(--azul-vibrante);
+            color: var(--branco);
+            transform: scale(1.02);
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #feedback {
+            margin-top: 15px; /* Ajustado */
+            margin-bottom: 10px; /* Ajustado */
+            font-weight: bold;
+            font-size: 1.0em;
+        }
+
+        .correto {
+            color: var(--verde-certo);
+        }
+
+        .errado {
+            color: var(--vermelho-errado);
+        }
+
+        .question-actions, .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px; /* Ajustado */
+            gap: 10px;
+        }
+
+        .question-actions button, .navigation-buttons button {
+            padding: 10px 15px;
+            background-image: linear-gradient(to right, var(--azul-claro), var(--azul-escuro));
+            color: var(--branco);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em; /* Ajustado */
+            font-family: 'Montserrat', sans-serif;
+            transition: background-image 0.3s ease, background-color 0.3s ease, transform 0.2s ease-in-out;
+            flex-grow: 1;
+        }
+
+        #pontuacao-final .card button {
+            padding: 12px 20px;
+            background-image: linear-gradient(to right, var(--azul-claro), var(--azul-escuro));
+            color: var(--branco);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-family: 'Montserrat', sans-serif;
+            transition: background-image 0.3s ease, background-color 0.3s ease, transform 0.2s ease-in-out;
+            margin-top: 20px;
+        }
+
+        #pontuacao-final .card button:hover:not(:disabled) {
+            background-image: none;
+            background-color: var(--azul-vibrante);
+            color: var(--branco);
+            transform: scale(1.05);
+        }
+
+
+        .navigation-buttons button.secondary-action {
+            background-image: none;
+            background-color: var(--cinza-claro);
+            color: var(--azul-escuro);
+            border: 1px solid var(--cor-secundaria);
+        }
+        .navigation-buttons button.secondary-action:hover:not(:disabled) {
+            background-color: var(--cor-secundaria);
+            color: var(--azul-escuro);
+            transform: scale(1.05);
+        }
+
+
+        #pontuacao-final {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .card {
+            background-color: var(--branco);
+            padding: 20px; /* Ajustado */
+            border-radius: 8px;
+            margin-bottom: 25px; /* Ajustado */
+            box-shadow: 0 2px 8px var(--sombra);
+            animation: fadeInSlideUp 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .accordion {
+            background-color: var(--azul-claro);
+            color: var(--branco);
+            cursor: pointer;
+            padding: 10px; /* Ajustado */
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 0.95em; /* Ajustado */
+            font-family: 'Montserrat', sans-serif;
+            border-radius: 5px;
+            margin-top: 10px; /* Ajustado */
+            transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+        }
+
+        .accordion:hover {
+            background-color: var(--azul-vibrante);
+            transform: scale(1.02);
+        }
+        .accordion.active + .panel {
+             border-top: 1px solid var(--cor-secundaria);
+        }
+
+
+        .panel {
+            padding: 0px 0px;
+            background-color: var(--branco);
+            max-height: 0;
+            overflow-y: auto;
+            transition: max-height 0.4s ease-in-out;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+            border-left: 1px solid var(--cor-secundaria);
+            border-right: 1px solid var(--cor-secundaria);
+            border-bottom: 1px solid var(--cor-secundaria);
+        }
+
+
+        .justificativa-item {
+            padding: 8px 12px; /* Ajustado */
+            margin: 6px 15px; /* Ajustado */
+            border-radius: 4px;
+            line-height: 1.4;
+            font-size: 0.75em; /* Diminuído para caber mais texto de justificativa */
+        }
+
+        .justificativa-item strong {
+            margin-right: 6px; /* Ajustado */
+            font-weight: bold;
+        }
+
+        .justificativa-item.certa {
+            background-color: var(--verde-justificativa-fundo);
+            border-left: 4px solid var(--verde-certo); /* Ajustado */
+            color: #2e7d32;
+        }
+        .justificativa-item.certa strong{
+            color: var(--verde-certo);
+        }
+
+        .justificativa-item.errada {
+            background-color: var(--vermelho-justificativa-fundo);
+            border-left: 4px solid var(--vermelho-errado); /* Ajustado */
+            color: #c62828;
+        }
+        .justificativa-item.errada strong{
+            color: var(--vermelho-errado);
+        }
+
+        .panel > p:not(.justificativa-item) {
+            margin: 12px 15px; /* Ajustado */
+        }
+
+        footer {
+            width: 100%;
+            padding: 15px; /* Ajustado */
+            text-align: center;
+            color: var(--azul-escuro);
+            background-color: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 -2px 5px var(--sombra);
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .footer-icon {
+            width: 22px; /* Ajustado */
+            height: 22px; /* Ajustado */
+            margin-right: 8px; /* Ajustado */
+            stroke: var(--azul-escuro);
+        }
+
+        #limpar-progresso-btn {
+            margin-left: 8px;
+            margin-top: 5px;
+            padding: 7px 10px; /* Ajustado */
+            border: 1px solid var(--azul-escuro);
+            background-color: var(--branco);
+            color: var(--azul-escuro);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em; /* Ajustado */
+        }
+        #limpar-progresso-btn:hover {
+            background-color: var(--cor-secundaria);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--azul-escuro);
+            padding: 8px 4px; /* Ajustado para acomodar mais botões */
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: flex-start; /* Alinha à esquerda para permitir scroll */
+            align-items: center;
+            gap: 4px; /* Diminuído o gap para mais botões */
+            overflow-x: auto;
+            z-index: 1000;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .bottom-nav button {
+            background-color: var(--azul-claro);
+            color: var(--branco);
+            border: 1px solid var(--azul-escuro);
+            border-radius: 50%;
+            width: 32px; /* Diminuído para caber mais botões (40) */
+            height: 32px; /* Diminuído */
+            font-size: 0.75em; /* Diminuído */
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .bottom-nav button:hover {
+            background-color: var(--azul-vibrante);
+            transform: translateY(-2px);
+        }
+
+        .bottom-nav button.atual {
+            background-color: var(--azul-vibrante);
+            transform: scale(1.15);
+            border: 2px solid var(--branco);
+            box-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+
+        .bottom-nav button.certo {
+            background-color: var(--verde-certo);
+            border-color: var(--verde-certo);
+            color: var(--branco);
+        }
+        .bottom-nav button.certo:hover {
+             background-color: #3e8e41;
+        }
+
+
+        .bottom-nav button.errado {
+            background-color: var(--vermelho-errado);
+            border-color: var(--vermelho-errado);
+            color: var(--branco);
+        }
+        .bottom-nav button.errado:hover {
+            background-color: #c4302b;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="animated-gradient-background"></div>
+    <div class="site-content">
+        <header>
+            <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+            </svg>
+            <h1>Quiz: Patologia das Neoplasias</h1>
+        </header>
+        <main>
+            <div id="quiz-container">
+                <div class="card">
+                    <p class="pergunta"></p>
+                    <div class="opcoes">
+                    </div>
+                    <div class="question-actions">
+                         <button id="pular-questao">Pular Questão</button>
+                    </div>
+                    <p id="feedback"></p>
+                    <button class="accordion">Ver Justificativa</button>
+                    <div class="panel">
+                    </div>
+                </div>
+            </div>
+            <div id="pontuacao-final" style="display: none;">
+                <div class="card">
+                    <h2>Pontuação Final: <span id="pontos">0</span></h2>
+                </div>
+            </div>
+            <div class="navigation-buttons" style="display: none;">
+                <button id="anterior-questao" class="secondary-action">Anterior</button>
+                <button id="proxima-questao">Próxima</button>
+                <button id="reiniciar-quiz">Reiniciar Quiz</button>
+            </div>
+        </main>
+    </div>
+    <footer>
+        <svg class="footer-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        </svg>
+        <span>Encontre mais quizzes e aprenda!</span>
+        <button id="limpar-progresso-btn">Limpar Progresso</button>
+    </footer>
+    <div class="bottom-nav">
+    </div>
+
+    <script>
+        const containerQuiz = document.getElementById('quiz-container');
+        const elementoPergunta = document.querySelector('.pergunta');
+        const containerOpcoes = document.querySelector('.opcoes');
+        const elementoFeedback = document.getElementById('feedback');
+        const btnPularQuestao = document.getElementById('pular-questao');
+
+        const btnAccordion = document.querySelector('.accordion');
+        const painelAccordion = document.querySelector('.panel');
+
+        const containerPontuacaoFinal = document.getElementById('pontuacao-final');
+        const elementoPontos = document.getElementById('pontos');
+
+        const containerNavegacao = document.querySelector('.navigation-buttons');
+        const btnAnterior = document.getElementById('anterior-questao');
+        const btnProxima = document.getElementById('proxima-questao');
+        const btnReiniciar = document.getElementById('reiniciar-quiz');
+        const btnLimparProgresso = document.getElementById('limpar-progresso-btn');
+
+        const CHAVE_PROCESSO = 'quizProgressoNeoplasiasV1';
+
+        const questoes = [
+            { // Questão 1
+                pergunta: "Um paciente masculino de 65 anos apresenta uma massa bem delimitada no tecido subcutâneo do braço, de crescimento lento e móvel à palpação. A biópsia excisional revela uma neoplasia composta por adipócitos maduros virtualmente indistinguíveis de adipócitos normais, sem pleomorfismo significativo, mitoses raras e sem evidência de invasão tecidual circundante. Esta descrição patológica, conforme os princípios de nomenclatura e características morfológicas das neoplasias, melhor se alinha com qual diagnóstico?",
+                opcoes: [
+                    "Adenoma de tecido adiposo, um tumor benigno com potencial de malignização.",
+                    "Lipossarcoma, indicando uma neoplasia maligna de origem mesenquimal.",
+                    "Hamartoma adiposo, caracterizado por um crescimento desordenado de tecido nativo.",
+                    "Lipoma, representando uma neoplasia benigna de tecido adiposo."
+                ],
+                correta: 3,
+                justificativas: [
+                    "Incorreta. Adenoma refere-se a neoplasias epiteliais benignas. Lipomas raramente malignizam, e a descrição não sugere tal potencial.",
+                    "Incorreta. Lipossarcoma é maligno, com invasão e atipia, características ausentes na descrição.",
+                    "Incorreta. Hamartoma é uma malformação de tecidos nativos, não uma neoplasia com crescimento autônomo como descrito.",
+                    "Correta. A descrição (bem delimitada, crescimento lento, adipócitos maduros sem atipia ou invasão) é clássica de lipoma, uma neoplasia benigna de tecido adiposo."
+                ]
+            },
+            { // Questão 2
+                pergunta: "Ao classificar uma neoplasia epitelial maligna que exibe um padrão de crescimento glandular, qual termo nomenclatural é classicamente aplicado, conforme as fontes?",
+                opcoes: [
+                    "Carcinoma Epidermóide",
+                    "Sarcoma",
+                    "Adenoma",
+                    "Adenocarcinoma"
+                ],
+                correta: 3,
+                justificativas: [
+                    "Incorreta. Carcinoma Epidermóide (ou Espinocelular) apresenta diferenciação escamosa, não glandular.",
+                    "Incorreta. Sarcoma designa neoplasias malignas de tecidos mesenquimais, não epiteliais.",
+                    "Incorreta. Adenoma é uma neoplasia epitelial benigna que forma glândulas, não maligna.",
+                    "Correta. Neoplasias malignas de origem epitelial são Carcinomas. Aquelas com padrão glandular são Adenocarcinomas."
+                ]
+            },
+            { // Questão 3
+                pergunta: "Um patologista examina uma lâmina de biópsia de um tumor e nota a presença de células com marcada variação no tamanho e forma, núcleos desproporcionalmente grandes e hipercromáticos, e figuras mitóticas bizarras. Conforme os critérios morfológicos para distinguir neoplasias, estas características são indicativas de:",
+                opcoes: [
+                    "Metaplasia",
+                    "Diferenciação Celular",
+                    "Anaplasia",
+                    "Hamartoma"
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Metaplasia é a substituição reversível de um tipo celular adulto por outro, com células maduras.",
+                    "Incorreta. Diferenciação refere-se à semelhança com células de origem; a descrição aponta para perda de diferenciação.",
+                    "Correta. Variação acentuada no tamanho e forma celular/nuclear (pleomorfismo), núcleos grandes/hipercromáticos e mitoses bizarras são manifestações de Anaplasia, um marcador de malignidade.",
+                    "Incorreta. Hamartoma é uma malformação de tecidos nativos maduros, sem as atipias descritas."
+                ]
+            },
+            { // Questão 4
+                pergunta: "Um radiologista identifica uma massa com bordas irregulares e que parece invadir o tecido circundante em um exame de imagem. O cirurgião confirma a dificuldade em delimitar a lesão durante a ressecção. Microscopicamente, o patologista observa ninhos celulares infiltrando o estroma adjacente. Conforme as características comparativas entre neoplasias benignas e malignas, este padrão de crescimento é típico de:",
+                opcoes: [
+                    "Tumores Benignos, que crescem de forma coesa e expansiva.",
+                    "Tumores Malignos, caracterizados por infiltração progressiva e destruição tecidual.",
+                    "Hamartomas, que se misturam desordenadamente com o tecido nativo.",
+                    "Tumores Benignos encapsulados, que delimitam-se nitidamente."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Tumores benignos crescem de forma coesa e expansiva, sem invadir.",
+                    "Correta. Neoplasias malignas caracterizam-se por infiltração progressiva, invasão e destruição dos tecidos circundantes, com margens irregulares.",
+                    "Incorreta. Hamartomas são malformações, não neoplasias com crescimento invasivo ativo.",
+                    "Incorreta. Tumores benignos são frequentemente encapsulados ou bem delimitados, o oposto do descrito."
+                ]
+            },
+            { // Questão 5
+                pergunta: "Qual das seguintes vias de disseminação metastática é considerada a mais comum para a disseminação inicial da maioria dos CARCINOMAS?",
+                opcoes: [
+                    "Disseminação Hematogênica",
+                    "Implante em Cavidades Corporais (Transcelômica)",
+                    "Disseminação por Continuidade",
+                    "Disseminação Linfática"
+                ],
+                correta: 3,
+                justificativas: [
+                    "Incorreta. Disseminação hematogênica é preferencial para sarcomas, embora carcinomas avançados também a utilizem.",
+                    "Incorreta. Implante transcelômico é característico de certos tumores (ex: ovário), não a via mais comum para a maioria dos carcinomas.",
+                    "Incorreta. Disseminação por continuidade (invasão local) é um pré-requisito, não uma via de metástase a distância.",
+                    "Correta. As fontes afirmam que a Disseminação Linfática é a via mais comum para a disseminação inicial da maioria dos carcinomas."
+                ]
+            },
+            { // Questão 6
+                pergunta: "Um médico encontra múltiplos pólipos adenomatosos no cólon de um paciente jovem durante uma colonoscopia. A remoção endoscópica desses pólipos é recomendada. Com base nas informações sobre condições predisponentes e lesões precursoras, qual a justificativa principal para essa conduta?",
+                opcoes: [
+                    "Os pólipos adenomatosos representam metástases de um câncer primário desconhecido e devem ser removidos para estadiamento.",
+                    "Os pólipos adenomatosos são malformações congênitas (coristomas) que causam sintomas obstrutivos e não regridem espontaneamente.",
+                    "Os pólipos adenomatosos são lesões precursoras bem definidas do adenocarcinoma colorretal e sua remoção previne o câncer invasivo.",
+                    "Os pólipos adenomatosos são neoplasias benignas sem potencial de malignização, mas sua remoção é necessária para confirmar o diagnóstico histológico."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Pólipos adenomatosos são neoplasias primárias benignas (precursoras), não metástases.",
+                    "Incorreta. Pólipos adenomatosos são neoplasias (adenomas), não coristomas. A principal razão para remoção é prevenção do câncer.",
+                    "Correta. Adenomas colônicos são lesões precursoras do adenocarcinoma colorretal. Sua remoção previne o câncer invasivo.",
+                    "Incorreta. Adenomas colônicos, especialmente os maiores ou com displasia de alto grau, têm risco significativo de malignização."
+                ]
+            },
+            { // Questão 7
+                pergunta: "A epidemiologia do câncer revela variações geográficas significativas na incidência de certos tipos de neoplasias. Um exemplo notável mencionado nos materiais é a alta incidência de carcinoma hepatocelular (CHC) em regiões como o sudeste da China e a África subsaariana. Qual fator de risco, frequentemente prevalente nessas regiões, é mais fortemente associado à causalidade do CHC, conforme as fontes?",
+                opcoes: [
+                    "Exposição a Radiação Ultravioleta",
+                    "Tabagismo Crônico",
+                    "Infecção Crônica pelos Vírus da Hepatite B (HBV) e C (HCV)",
+                    "Consumo Elevado de Carnes Processadas"
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Exposição UV é fator de risco para cânceres de pele, não CHC.",
+                    "Incorreta. Tabagismo é fator para vários cânceres, mas não o predominante para CHC globalmente.",
+                    "Correta. Infecção crônica por HBV e HCV é a principal causa de CHC mundialmente, especialmente em regiões de alta incidência como sudeste da China e África subsaariana.",
+                    "Incorreta. Consumo de carnes processadas está associado a câncer colorretal e de estômago, não CHC."
+                ]
+            },
+            { // Questão 8
+                pergunta: "A interação entre fatores genéticos e ambientais é fundamental na carcinogênese esporádica. Um exemplo dramático mencionado nos materiais de uma condição hereditária onde um defeito genético específico aumenta maciçamente a suscetibilidade ao câncer induzido por um carcinógeno ambiental é:",
+                opcoes: [
+                    "Síndrome de Li-Fraumeni e exposição a pesticidas.",
+                    "Polipose Adenomatosa Familiar (PAF) e dieta rica em gorduras.",
+                    "Xeroderma Pigmentoso (XP) e exposição à luz ultravioleta (UV).",
+                    "Síndrome de Lynch e consumo de álcool."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Li-Fraumeni (TP53) predispõe a vários tumores, mas não há menção de interação maciça específica com pesticidas.",
+                    "Incorreta. PAF (APC) predispõe a câncer colorretal; dieta influencia, mas não como a interação XP/UV.",
+                    "Correta. XP (defeito no reparo NER) causa extrema sensibilidade à luz UV, aumentando maciçamente o risco de câncer de pele. É um exemplo claro de interação gene-ambiente.",
+                    "Incorreta. Síndrome de Lynch (defeito MMR) predispõe a vários cânceres; associação com álcool não é tão drástica quanto XP/UV."
+                ]
+            },
+            { // Questão 9
+                pergunta: "A carcinogênese, em sua essência, é descrita como uma doença genética que surge do acúmulo de alterações no DNA que afetam genes críticos. Qual a característica fundamental dessas alterações genéticas que permite o início do processo, conforme os materiais?",
+                opcoes: [
+                    "Devem ser letais para a célula para eliminar a competição.",
+                    "Precisam ser restritas apenas a alterações na sequência de nucleotídeos.",
+                    "Devem ser não letais para a célula precursora, permitindo sua sobrevivência e proliferação.",
+                    "Precisam ocorrer simultaneamente em todos os genes supressores de tumor."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Dano letal mataria a célula, impedindo a formação do tumor.",
+                    "Incorreta. Alterações epigenéticas também desempenham um papel significativo, além de mutações genéticas.",
+                    "Correta. A carcinogênese inicia-se por um dano genético não letal em uma célula precursora, permitindo sua sobrevivência, proliferação e transmissão das alterações.",
+                    "Incorreta. O processo é multifásico, com acúmulo progressivo de alterações, não necessariamente simultâneas nem em todos os supressores."
+                ]
+            },
+            { // Questão 10
+                pergunta: "Considere a seguinte situação clínica: Um paciente com Leucemia Mieloide Crônica (LMC) apresenta uma translocação cromossômica específica entre os cromossomos 9 e 22, resultando na formação de um gene de fusão. Qual gene de fusão é classicamente associado a esta translocação e atua como uma tirosina quinase constitutivamente ativa, sendo um alvo terapêutico importante?",
+                opcoes: [
+                    "MYC-IgH",
+                    "BCR-ABL",
+                    "EWS-FLI1",
+                    "HER2-EGFR"
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. MYC-IgH é associado ao Linfoma de Burkitt.",
+                    "Correta. A translocação t(9;22) na LMC cria o gene de fusão BCR-ABL, uma tirosina quinase constitutivamente ativa, alvo terapêutico.",
+                    "Incorreta. EWS-FLI1 é associado ao Sarcoma de Ewing.",
+                    "Incorreta. HER2 e EGFR são receptores tirosina quinase, mas não formam o gene de fusão BCR-ABL na LMC."
+                ]
+            },
+            { // Questão 11
+                pergunta: "A proteína p53 é frequentemente referida como o "guardião do genoma" devido ao seu papel crucial na prevenção da transformação neoplásica. Qual das seguintes ações NÃO é uma função primária da proteína p53 ativada em resposta a estresses celulares como dano ao DNA, conforme descrito nos materiais?",
+                opcoes: [
+                    "Induzir a parada temporária do ciclo celular (quiescência) para permitir o reparo do DNA.",
+                    "Desencadear a apoptose (morte celular programada) se o dano ao DNA for irreparável.",
+                    "Promover a degradação da β-catenina no citoplasma.",
+                    "Induzir a senescência celular (parada permanente do ciclo celular)."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Esta é uma função primária da p53 (parada do ciclo via p21).",
+                    "Incorreta. Esta é uma função primária da p53 (indução de apoptose via BAX, etc.).",
+                    "Correta. A promoção da degradação da β-catenina é uma função da proteína APC, não da p53.",
+                    "Incorreta. Esta é uma função primária da p53 (indução de senescência)."
+                ]
+            },
+            { // Questão 12
+                pergunta: "Em relação à via de sinalização WNT/β-catenina e o gene supressor de tumor APC (Adenomatous Polyposis Coli), é CORRETO afirmar, com base nos materiais:",
+                opcoes: [
+                    "Mutações no gene APC levam ao acúmulo de β-catenina no núcleo, ativando genes promotores de crescimento.",
+                    "A proteína APC normalmente promove a translocação da β-catenina para o núcleo.",
+                    "Mutações germinativas no gene APC causam a Síndrome de Li-Fraumeni.",
+                    "A via WNT normalmente inibe a proliferação celular, sendo ativada por APC."
+                ],
+                correta: 0,
+                justificativas: [
+                    "Correta. Mutações em APC levam à perda de sua função de degradar β-catenina, resultando em seu acúmulo nuclear e ativação de genes de crescimento.",
+                    "Incorreta. APC promove a degradação da β-catenina no citoplasma.",
+                    "Incorreta. Mutações em APC causam Polipose Adenomatosa Familiar (PAF). Li-Fraumeni é por mutações em TP53.",
+                    "Incorreta. A via WNT estimula a proliferação celular, inibindo o complexo de destruição da β-catenina mediado por APC."
+                ]
+            },
+            { // Questão 13
+                pergunta: "O conceito das "Marcas Registradas" (Hallmarks) do Câncer descreve capacidades biológicas essenciais adquiridas pelas células tumorais. Qual das seguintes marcas, também conhecida como Glicólise Aeróbica, descreve a reprogramação metabólica onde células neoplásicas absorvem altos níveis de glicose e a convertem em lactato mesmo na presença de oxigênio, visando sustentar a biossíntese para proliferação rápida?",
+                opcoes: [
+                    "Evasão da Apoptose",
+                    "Angiogênese Sustentada",
+                    "Metabolismo Celular Alterado (Efeito Warburg)",
+                    "Insensibilidade aos Sinais Inibidores do Crescimento"
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Evasão da apoptose é a resistência à morte celular programada.",
+                    "Incorreta. Angiogênese sustentada é a formação de novos vasos sanguíneos.",
+                    "Correta. Metabolismo Celular Alterado, manifestado pelo Efeito Warburg (glicólise aeróbica), permite que células cancerosas convertam glicose em lactato para biossíntese, mesmo com oxigênio.",
+                    "Incorreta. Insensibilidade a sinais inibidores de crescimento envolve perda de função de supressores tumorais."
+                ]
+            },
+            { // Questão 14
+                pergunta: "A instabilidade genômica é considerada uma "característica facilitadora" na carcinogênese. Qual síndrome de predisposição hereditária ao câncer, descrita nos materiais, resulta de defeitos nos genes de reparo de malpareamento (Mismatch Repair - MMR) e está associada à instabilidade de microssatélites (MSI)?",
+                opcoes: [
+                    "Síndrome de Li-Fraumeni",
+                    "Retinoblastoma Hereditário",
+                    "Síndrome de Lynch (HNPCC)",
+                    "Polipose Adenomatosa Familiar (PAF)"
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Síndrome de Li-Fraumeni é causada por mutações no TP53.",
+                    "Incorreta. Retinoblastoma Hereditário é por mutações no RB1.",
+                    "Correta. Síndrome de Lynch (HNPCC) é causada por defeitos em genes de reparo de malpareamento (MMR), resultando em instabilidade de microssatélites (MSI).",
+                    "Incorreta. Polipose Adenomatosa Familiar (PAF) é por mutações no APC."
+                ]
+            },
+            { // Questão 15
+                pergunta: "O gene TP53 é o gene mais frequentemente mutado em cânceres humanos. Mutações em ambos os alelos de TP53 levam à perda de função da proteína p53. Pacientes que herdam uma cópia mutada de TP53 na linhagem germinativa apresentam um risco significativamente aumentado de desenvolver uma ampla variedade de tumores, frequentemente em idade jovem. Esta condição hereditária é conhecida como:",
+                opcoes: [
+                    "Retinoblastoma Hereditário",
+                    "Síndrome de Li-Fraumeni",
+                    "Síndrome de Lynch",
+                    "Neurofibromatose Tipo 1"
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Retinoblastoma Hereditário é causado por mutações germinativas no gene RB1.",
+                    "Correta. A herança de um alelo TP53 mutante na linhagem germinativa causa a Síndrome de Li-Fraumeni, predispondo a múltiplos cânceres.",
+                    "Incorreta. Síndrome de Lynch é por mutações em genes de reparo de malpareamento.",
+                    "Incorreta. Neurofibromatose Tipo 1 é por mutações no gene NF1."
+                ]
+            },
+            { // Questão 16
+                pergunta: "Qual classe de genes, quando mutada, geralmente causa um ganho de função que promove a proliferação celular de forma autônoma e desregulada?",
+                opcoes: [
+                    "Genes supressores de tumor",
+                    "Genes de reparo do DNA",
+                    "Genes reguladores da apoptose",
+                    "Proto-oncogenes"
+                ],
+                correta: 3,
+                justificativas: [
+                    "Incorreta. Mutações em genes supressores de tumor geralmente causam perda de função.",
+                    "Incorreta. Mutações em genes de reparo do DNA levam à instabilidade genômica, não diretamente a ganho de função proliferativa.",
+                    "Incorreta. Mutações em genes de apoptose podem inibir a morte celular, mas 'ganho de função proliferativa' descreve oncogenes.",
+                    "Correta. Proto-oncogenes, quando mutados (tornando-se oncogenes), sofrem um ganho de função, promovendo proliferação desregulada."
+                ]
+            },
+            { // Questão 17
+                pergunta: "Um paciente é diagnosticado com Sarcoma de Ewing, um tipo de tumor mesenquimal. A análise molecular revela a presença de uma translocação cromossômica específica t(11;22)(q24;q12) que cria um gene de fusão. Conforme os mecanismos de rearranjos genéticos em tumores, qual a principal consequência patogênica dessa translocação específica no Sarcoma de Ewing, conforme as fontes?",
+                opcoes: [
+                    "Superexpressão do gene BCL2.",
+                    "Criação de um gene de fusão que codifica uma tirosina quinase constitutivamente ativa.",
+                    "Criação de um gene de fusão que codifica um fator de transcrição oncogênico.",
+                    "Inativação bialélica do gene TP53."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Superexpressão de BCL2 é típica do Linfoma Folicular (t(14;18)).",
+                    "Incorreta. Fusão com tirosina quinase ativa é característica de BCR-ABL na LMC. Sarcoma de Ewing envolve fusão de fatores de transcrição.",
+                    "Correta. A translocação t(11;22) no Sarcoma de Ewing cria o gene de fusão EWS-FLI1, que codifica um fator de transcrição oncogênico.",
+                    "Incorreta. Inativação de TP53 é comum em muitos cânceres, mas não é a consequência direta da t(11;22) no Sarcoma de Ewing."
+                ]
+            },
+            { // Questão 18
+                pergunta: "O potencial de replicação ilimitado (imortalidade replicativa) é uma marca registrada do câncer, permitindo que as células tumorais superem a senescência replicativa normal. Qual mecanismo é mais comum nas células cancerosas para alcançar essa imortalidade, conforme descrito nos materiais?",
+                opcoes: [
+                    "Inativação do gene telomerase.",
+                    "Superexpressão de proteínas histonas.",
+                    "Reativação da enzima telomerase.",
+                    "Perda do controle do ciclo celular no ponto de controle G1/S."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Inativação da telomerase levaria ao encurtamento dos telômeros e senescência.",
+                    "Incorreta. Superexpressão de histonas não é o principal mecanismo para imortalidade replicativa.",
+                    "Correta. A reativação da enzima telomerase é o mecanismo mais comum para manter o comprimento dos telômeros e alcançar imortalidade replicativa em células cancerosas.",
+                    "Incorreta. Perda do controle G1/S contribui para proliferação, mas não confere imortalidade sem manutenção dos telômeros."
+                ]
+            },
+            { // Questão 19
+                pergunta: "A invasão local e a metástase são características que distinguem fundamentalmente as neoplasias malignas e são as principais causas de mortalidade por câncer. O processo de invasão da matriz extracelular (MEC) envolve várias etapas. Qual das seguintes NÃO é uma etapa crucial na invasão da MEC por células tumorais, conforme detalhado nos materiais?",
+                opcoes: [
+                    "Degradação da MEC por enzimas proteolíticas.",
+                    "Afrouxamento das junções intercelulares entre as células tumorais.",
+                    "Aumento da adesão célula-célula mediada por E-caderinas.",
+                    "Migração ativa das células tumorais através da MEC degradada."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Esta é uma etapa crucial (ex: MMPs).",
+                    "Incorreta. Esta é uma etapa crucial (frequentemente pela perda de E-caderina).",
+                    "Correta. O afrouxamento das junções intercelulares ocorre pela PERDA ou diminuição da função da E-caderina, não pelo aumento da adesão.",
+                    "Incorreta. Esta é uma etapa crucial."
+                ]
+            },
+            { // Questão 20
+                pergunta: "O estudo das Células-Tronco Cancerosas (CTCs), ou células iniciadoras de tumor, postula uma hierarquia tumoral onde uma pequena subpopulação de células possui propriedades específicas. Qual característica biológica é atribuída às CTCs, tornando-as um desafio terapêutico e associando-as à recidiva e metástase?",
+                opcoes: [
+                    "Alta taxa de proliferação rápida, tornando-as altamente sensíveis à quimioterapia.",
+                    "Ausência completa de capacidade de diferenciação, mantendo-se indiferenciadas.",
+                    "Maior resistência a terapias convencionais e capacidade de autorrenovação.",
+                    "Uniformidade genética em comparação com o restante da massa tumoral."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. CTCs podem ter baixa taxa de proliferação (quiescência), tornando-as resistentes à quimioterapia.",
+                    "Incorreta. CTCs têm capacidade de se diferenciar para gerar a massa tumoral.",
+                    "Correta. CTCs possuem capacidade de autorrenovação e são frequentemente mais resistentes a terapias, contribuindo para recidiva e metástase.",
+                    "Incorreta. CTCs contribuem para a heterogeneidade tumoral ao se diferenciarem."
+                ]
+            },
+            { // Questão 21
+                pergunta: "A carcinogênese por agentes químicos é frequentemente descrita em termos de iniciação e promoção. Nesta abordagem, qual a característica distintiva de um agente promotor, conforme os materiais?",
+                opcoes: [
+                    "Causa dano genético permanente e irreversível (mutação) em uma célula, sendo um evento rápido.",
+                    "Requer ativação metabólica para se converter em um carcinógeno final ativo que danifica o DNA.",
+                    "Induz a proliferação clonal de células iniciadas, fixando a mutação e permitindo o acúmulo de alterações adicionais.",
+                    "Possui atividade tanto iniciadora quanto promotora, sendo considerado um carcinógeno completo."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Esta descrição se refere a um agente iniciador.",
+                    "Incorreta. Esta descrição se refere a um pró-carcinógeno (que pode ser um iniciador).",
+                    "Correta. Agentes promotores induzem a proliferação clonal de células já iniciadas, fixando a mutação e permitindo a progressão tumoral.",
+                    "Incorreta. Esta descrição se refere a um carcinógeno completo. A questão foca no promotor."
+                ]
+            },
+            { // Questão 22
+                pergunta: "Os vírus oncogênicos de DNA utilizam diversas estratégias para promover a carcinogênese. O Papilomavírus Humano (HPV) de alto risco (tipos 16, 18, etc.) é um exemplo clássico associado ao câncer de colo do útero e outros. Qual o principal mecanismo molecular pelo qual as oncoproteínas E6 e E7 do HPV de alto risco contribuem para a transformação maligna, conforme descrito nos materiais?",
+                opcoes: [
+                    "Ativação constitutiva da via tirosina quinase BCR-ABL.",
+                    "Promoção da degradação da proteína supressora de tumor p53 (por E6) e inativação da proteína pRB (por E7).",
+                    "Superexpressão da proteína antiapoptótica BCL2.",
+                    "Indução de inflamação crônica intensa no tecido hospedeiro."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Ativação de BCR-ABL está associada à LMC.",
+                    "Correta. As oncoproteínas E6 e E7 do HPV de alto risco promovem a degradação de p53 e a inativação de pRB, respectivamente, desregulando o ciclo celular e a apoptose.",
+                    "Incorreta. Superexpressão de BCL2 é típica de linfomas foliculares.",
+                    "Incorreta. Embora alguns vírus causem câncer via inflamação crônica, o mecanismo principal do HPV é a ação das oncoproteínas E6/E7."
+                ]
+            },
+            { // Questão 23
+                pergunta: "A interação entre o tumor e o sistema imunológico do hospedeiro é complexa. O sistema imune pode reconhecer e eliminar células tumorais (vigilância imunológica), mas os tumores malignos desenvolvem mecanismos para evadir essa resposta. Qual dos seguintes mecanismos é utilizado pelas células tumorais para evadir a destruição pelos linfócitos T citotóxicos (CTLs), conforme descrito nos materiais?",
+                opcoes: [
+                    "Aumento da expressão de moléculas MHC de Classe I.",
+                    "Secreção de citocinas imunossupressoras como TGF-β e IL-10.",
+                    "Perda ou redução da expressão de ligantes de checkpoint imune como PD-L1.",
+                    "Aumento da expressão de antígenos tumorais imunogênicos."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. A diminuição ou perda da expressão de MHC Classe I é um mecanismo de evasão.",
+                    "Correta. A secreção de citocinas imunossupressoras como TGF-β e IL-10 pelas células tumorais é um mecanismo de evasão imune.",
+                    "Incorreta. A expressão de ligantes de checkpoint como PD-L1 é um mecanismo de evasão. Sua perda tornaria o tumor mais visível.",
+                    "Incorreta. A perda ou redução da expressão de antígenos tumorais é um mecanismo de evasão."
+                ]
+            },
+            { // Questão 24
+                pergunta: "A caquexia neoplásica é uma síndrome sistêmica comum e debilitante em pacientes com câncer avançado. Qual das seguintes afirmações melhor descreve a etiologia e as características metabólicas da caquexia neoplásica, conforme apresentado nos materiais?",
+                opcoes: [
+                    "É causada principalmente pela má absorção de nutrientes devido à invasão tumoral do trato gastrointestinal.",
+                    "É um estado metabólico alterado, mediado por fatores solúveis como citocinas (ex: TNF-α), resultando em perda de peso e aumento do gasto calórico.",
+                    "Resulta unicamente das demandas nutricionais elevadas do tumor em crescimento rápido.",
+                    "É uma resposta inflamatória localizada no sítio tumoral, sem efeitos sistêmicos significativos no metabolismo."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Embora a invasão GI possa contribuir, a caquexia é primariamente por alterações metabólicas sistêmicas.",
+                    "Correta. Caquexia é um estado metabólico alterado mediado por fatores solúveis (ex: citocinas como TNF-α), causando perda de peso e aumento do gasto calórico.",
+                    "Incorreta. Não é causada unicamente pelas demandas nutricionais do tumor.",
+                    "Incorreta. Caquexia é um fenômeno sistêmico com efeitos metabólicos significativos."
+                ]
+            },
+            { // Questão 25
+                pergunta: "O estadiamento do câncer sólido é crucial para determinar o prognóstico e planejar o tratamento. O sistema TNM é o principal sistema de estadiamento utilizado. O que representam as letras T, N e M neste sistema, conforme descrito nos materiais?",
+                opcoes: [
+                    "T - Taxa de crescimento do tumor; N - Número de mitoses; M - Morfologia celular.",
+                    "T - Tamanho do tumor primário; N - Número de linfonodos afetados; M - Metástase a distância.",
+                    "T - Tipo histológico do tumor; N - Nível de diferenciação celular; M - Multiplicidade de tumores.",
+                    "T - Tempo de duplicação tumoral; N - Necrose tumoral; M - Metaplasia associada."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Estes não são os significados de T, N, M no sistema TNM.",
+                    "Correta. No sistema TNM: T refere-se ao tamanho/extensão do tumor primário, N à presença/extensão de metástase em linfonodos regionais, e M à presença/ausência de metástase a distância.",
+                    "Incorreta. Estes não são os significados de T, N, M no sistema TNM.",
+                    "Incorreta. Estes não são os significados de T, N, M no sistema TNM."
+                ]
+            },
+            { // Questão 26
+                pergunta: "Em oncologia, a identificação de biomarcadores com valor prognóstico ou preditivo de resposta à terapia é essencial. A Imuno-histoquímica (IHQ) é uma técnica laboratorial amplamente utilizada para detectar a presença e abundância de proteínas específicas em cortes de tecido. Qual é uma aplicação fundamental da IHQ em oncologia, conforme mencionado nos materiais?",
+                opcoes: [
+                    "Detecção de mutações pontuais no DNA tumoral.",
+                    "Classificação de tumores indiferenciados por identificação de marcadores de linhagem.",
+                    "Quantificação da instabilidade de microssatélites (MSI).",
+                    "Análise da ploidia do DNA celular."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Detecção de mutações pontuais é feita por técnicas moleculares (sequenciamento).",
+                    "Correta. IHQ é fundamental na classificação de tumores indiferenciados pela identificação de marcadores de linhagem celular, além de identificar sítio primário de metástases e moléculas prognósticas/preditivas.",
+                    "Incorreta. Quantificação de MSI é feita por técnicas moleculares (PCR, sequenciamento).",
+                    "Incorreta. Análise de ploidia é por citometria de fluxo ou cariotipagem."
+                ]
+            },
+            { // Questão 27
+                pergunta: "Considere um paciente com Síndrome de Li-Fraumeni. Conforme a hipótese de "dois golpes" de Knudson aplicada a genes supressores de tumor e a hereditariedade, qual a base molecular da alta predisposição ao câncer neste paciente?",
+                opcoes: [
+                    "Todas as células do paciente já possuem mutações bialélicas no gene TP53.",
+                    "O paciente herdou uma cópia mutada de TP53 na linhagem germinativa, necessitando apenas de um "segundo golpe" somático para inativar o outro alelo e iniciar o tumor.",
+                    "O paciente herdou ambas as cópias mutadas de TP53, levando a um risco aumentado apenas na infância.",
+                    "O paciente herdou uma cópia mutada de BRCA1, aumentando a instabilidade genômica."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Se todas as células tivessem mutações bialélicas em TP53, provavelmente não seriam viáveis.",
+                    "Correta. Na Síndrome de Li-Fraumeni (TP53), o paciente herda uma cópia mutada (1º golpe). O câncer se desenvolve quando o alelo normal restante sofre mutação somática (2º golpe).",
+                    "Incorreta. Herdar ambas as cópias mutadas seria provavelmente letal. O risco não é restrito à infância.",
+                    "Incorreta. Li-Fraumeni é por mutações em TP53, não BRCA1."
+                ]
+            },
+            { // Questão 28
+                pergunta: "O Efeito Warburg, ou glicólise aeróbica, é uma alteração metabólica característica das células cancerosas. Embora pareça energeticamente ineficiente em comparação com a fosforilação oxidativa, qual vantagem primária este metabolismo confere às células tumorais de rápida proliferação, conforme descrito nos materiais?",
+                opcoes: [
+                    "Produção máxima de ATP por molécula de glicose para suprir a alta demanda energética.",
+                    "Geração de uma grande quantidade de intermediários metabólicos para a biossíntese de componentes celulares.",
+                    "Capacidade de converter lactato em glicose para uso energético.",
+                    "Redução da captação de glicose para evitar a acidose do microambiente."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Glicólise produz menos ATP por glicose que a fosforilação oxidativa.",
+                    "Correta. A principal vantagem do Efeito Warburg é fornecer intermediários metabólicos para a biossíntese de componentes celulares, sustentando a proliferação rápida.",
+                    "Incorreta. O Efeito Warburg produz lactato; a conversão de lactato em glicose não é a vantagem principal descrita.",
+                    "Incorreta. Células cancerosas no Efeito Warburg têm alta captação de glicose."
+                ]
+            },
+            { // Questão 29
+                pergunta: "A capacidade de evadir da apoptose é crucial para a sobrevivência e progressão das células cancerosas. Qual proteína antiapoptótica da família BCL2 é frequentemente superexpressa em linfomas foliculares devido a uma translocação cromossômica t(14;18), protegendo as células da morte celular programada?",
+                opcoes: [
+                    "BAX",
+                    "PUMA",
+                    "BCL-2",
+                    "BID"
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. BAX é uma proteína pró-apoptótica.",
+                    "Incorreta. PUMA é uma proteína pró-apoptótica (BH3-only).",
+                    "Correta. A superexpressão de BCL-2, frequentemente pela translocação t(14;18) em linfomas foliculares, protege as células da apoptose.",
+                    "Incorreta. BID é uma proteína pró-apoptótica (BH3-only)."
+                ]
+            },
+            { // Questão 30
+                pergunta: "Qual agente carcinogênico, proveniente principalmente da luz solar, é um carcinógeno físico bem estabelecido e está implicado na etiologia da maioria dos cânceres de pele, incluindo carcinoma basocelular, carcinoma espinocelular e melanoma maligno?",
+                opcoes: [
+                    "Radiação Ionizante (Raios X, Gama)",
+                    "Agentes Alquilantes",
+                    "Luz Ultravioleta (Raios UV)",
+                    "Aflatoxina B1"
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Radiação ionizante é carcinogênica para vários tecidos, mas UV é o primário para a maioria dos cânceres de pele.",
+                    "Incorreta. Agentes alquilantes são carcinógenos químicos.",
+                    "Correta. A Luz Ultravioleta (Raios UV) da luz solar é o principal carcinógeno físico para a maioria dos cânceres de pele.",
+                    "Incorreta. Aflatoxina B1 é um carcinógeno químico associado ao carcinoma hepatocelular."
+                ]
+            },
+            { // Questão 31
+                pergunta: "A Carcinogênese Microbiana é responsável por uma proporção significativa de cânceres humanos. Qual bactéria, comumente associada a gastrite crônica e úlceras pépticas, é classificada como cancerígena e envolvida na gênese de adenocarcinomas gástricos e linfomas MALT gástricos?",
+                opcoes: [
+                    "Vírus do Papiloma Humano (HPV)",
+                    "Vírus Epstein-Barr (EBV)",
+                    "Helicobacter pylori",
+                    "Vírus da Hepatite B (HBV)"
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. HPV é um vírus associado a cânceres anogenitais e de orofaringe.",
+                    "Incorreta. EBV é um vírus associado a linfomas e carcinoma nasofaríngeo.",
+                    "Correta. Helicobacter pylori é uma bactéria classificada como cancerígena, envolvida na gênese de adenocarcinomas gástricos e linfomas MALT gástricos.",
+                    "Incorreta. HBV é um vírus associado ao carcinoma hepatocelular."
+                ]
+            },
+            { // Questão 32
+                pergunta: "A proteína RAS é um dos oncogenes mais frequentemente mutados em tumores humanos. Mutações pontuais em RAS resultam em uma proteína RAS constitutivamente ativa. Qual a principal consequência dessa ativação constitutiva de RAS na sinalização celular pró-crescimento, conforme descrito nos materiais?",
+                opcoes: [
+                    "Inativação direta da proteína supressora de tumor p53.",
+                    "Promoção contínua da sinalização proliferativa através de vias a jusante como RAF/MEK/ERK e PI3K/AKT.",
+                    "Superexpressão da enzima telomerase.",
+                    "Degradação da matriz extracelular (MEC)."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Inativação de p53 não é consequência primária da ativação de RAS.",
+                    "Correta. RAS constitutivamente ativa promove sinalização proliferativa contínua via RAF/MEK/ERK e PI3K/AKT.",
+                    "Incorreta. Superexpressão da telomerase é um mecanismo distinto para imortalidade.",
+                    "Incorreta. Degradação da MEC está associada à invasão/metástase, não é o principal efeito direto da ativação de RAS."
+                ]
+            },
+            { // Questão 33
+                pergunta: "Um tumor é diagnosticado como Anaplásico. Qual a implicação prognóstica e terapêutica mais provável desta característica, com base nas informações fornecidas?",
+                opcoes: [
+                    "O tumor é bem diferenciado, indicando um crescimento lento e bom prognóstico.",
+                    "O tumor apresenta ausência de diferenciação, geralmente associado a um comportamento mais agressivo.",
+                    "O tumor é composto por células normais desorganizadas, sem potencial maligno significativo.",
+                    "O tumor é encapsulado e bem delimitado, facilitando a ressecção cirúrgica curativa."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Anaplasia significa ausência de diferenciação, o oposto de bem diferenciado.",
+                    "Correta. Anaplasia (ausência de diferenciação) é uma característica de malignidade e geralmente está associada a um comportamento mais agressivo.",
+                    "Incorreta. Anaplasia é característica de malignidade, não de lesões não neoplásicas como hamartomas.",
+                    "Incorreta. Tumores anaplásicos são malignos e geralmente infiltrativos, não encapsulados."
+                ]
+            },
+            { // Questão 34
+                pergunta: "Qual síndrome paraneoplásica, comumente associada ao carcinoma de pequenas células do pulmão, manifesta-se por produção ectópica de ACTH ou peptídeos semelhantes ao ACTH pelas células tumorais?",
+                opcoes: [
+                    "Síndrome Miastênica de Lambert-Eaton",
+                    "Síndrome de Cushing",
+                    "Síndrome de Secreção Inapropriada de ADH (SIADH)",
+                    "Hipercalcemia"
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. Lambert-Eaton é neurológica, por autoanticorpos contra canais de cálcio.",
+                    "Correta. Síndrome de Cushing paraneoplásica é associada ao carcinoma de pequenas células do pulmão e causada por produção ectópica de ACTH.",
+                    "Incorreta. SIADH é por secreção ectópica de ADH, também associada ao carcinoma de pequenas células.",
+                    "Incorreta. Hipercalcemia paraneoplásica é geralmente por PTHrP ou metástases osteolíticas."
+                ]
+            },
+            { // Questão 35
+                pergunta: "O diagnóstico laboratorial do câncer envolve uma abordagem multiparamétrica. A análise morfológica de amostras de tecido é fundamental. Qual método de amostragem de tecido, frequentemente realizado durante a cirurgia, permite uma avaliação histológica rápida (em minutos) para fornecer um diagnóstico preliminar ou avaliar margens cirúrgicas em tempo real?",
+                opcoes: [
+                    "Punção Aspirativa por Agulha Fina (PAAF)",
+                    "Exame Citopatológico (Esfregaço)",
+                    "Biópsia de Congelação (Exame Intraoperatório)",
+                    "Histopatologia (Exame Anatomopatológico) de Rotina"
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. PAAF é um método citológico, não histológico para avaliação arquitetural rápida.",
+                    "Incorreta. Exame citopatológico avalia células, não a arquitetura tecidual como a biópsia de congelação.",
+                    "Correta. Biópsia de Congelação (Exame Intraoperatório) permite avaliação histológica rápida durante a cirurgia para diagnóstico preliminar ou avaliação de margens.",
+                    "Incorreta. Histopatologia de rotina leva horas ou dias, não é em tempo real."
+                ]
+            },
+            { // Questão 36
+                pergunta: "Um paciente com histórico familiar de câncer colorretal é submetido a testes genéticos e é identificado como portador de uma mutação germinativa no gene APC. Com base nas informações sobre diagnóstico molecular e predisposição hereditária, qual a implicação clínica mais importante dessa descoberta para o paciente e seus familiares?",
+                opcoes: [
+                    "Confirma o diagnóstico de um tumor primário de cólon já estabelecido.",
+                    "Permite o aconselhamento genético para o paciente e familiares e a implementação de vigilância intensificada ou medidas profiláticas para indivíduos de alto risco.",
+                    "Indica que o paciente desenvolverá metástases em todos os casos e o tratamento quimioterápico deve ser iniciado imediatamente.",
+                    "Sugere que o tumor, caso se desenvolva, será resistente à terapia alvo."
+                ],
+                correta: 1,
+                justificativas: [
+                    "Incorreta. A mutação indica predisposição, não confirma um tumor existente.",
+                    "Correta. A identificação de mutação germinativa em APC (PAF) permite aconselhamento genético, vigilância intensificada (colonoscopias) e consideração de medidas profiláticas para indivíduos de alto risco.",
+                    "Incorreta. Não garante metástases nem implica quimioterapia profilática imediata.",
+                    "Incorreta. Não implica necessariamente resistência à terapia alvo; isso depende do perfil molecular do tumor."
+                ]
+            },
+            { // Questão 37
+                pergunta: "O conceito da "cascata metastática" descreve o processo sequencial pelo qual as células tumorais se disseminam do sítio primário para locais distantes. Qual das seguintes sequências de eventos na cascata metastática, a partir de um tumor primário sólido, representa uma etapa fundamental para a disseminação a distância, conforme descrito nos materiais?",
+                opcoes: [
+                    "Invasão local da MEC -> Intravasamento -> Sobrevivência na circulação -> Extravasamento -> Colonização.",
+                    "Angiogênese sustentada -> Formação de hamartoma no sítio distante.",
+                    "Perda de anaplasia -> Encaspulamento -> Crescimento expansivo.",
+                    "Ativação de p53 -> Indução de apoptose -> Regressão tumoral."
+                ],
+                correta: 0,
+                justificativas: [
+                    "Correta. Esta sequência (invasão local, intravasamento, sobrevivência na circulação, extravasamento, colonização) descreve as etapas cruciais da cascata metastática.",
+                    "Incorreta. Angiogênese é importante, mas formação de hamartoma não faz parte da metástase.",
+                    "Incorreta. Estas são características de tumores benignos, não da cascata metastática.",
+                    "Incorreta. Estes são mecanismos de supressão tumoral, não de progressão metastática."
+                ]
+            },
+            { // Questão 38
+                pergunta: "Um paciente apresenta sintomas neurológicos, incluindo dificuldade de marcha e fala, sem evidência de metástases cerebrais por imagem. Após investigação, descobre-se um carcinoma de ovário oculto. Os sintomas neurológicos são posteriormente atribuídos a anticorpos autoimunes que reagem cruzadamente com antígenos neuronais expressos tanto pelo tumor quanto pelo tecido nervoso. Qual síndrome sistêmica associada ao câncer é melhor exemplificada por este quadro clínico?",
+                opcoes: [
+                    "Caquexia Neoplásica",
+                    "Síndrome de Lise Tumoral",
+                    "Síndrome de Cushing Paraneoplásica",
+                    "Síndrome Paraneoplásica Neurológica"
+                ],
+                correta: 3,
+                justificativas: [
+                    "Incorreta. Caquexia é perda de peso e alterações metabólicas.",
+                    "Incorreta. Síndrome de lise tumoral é uma complicação metabólica aguda do tratamento.",
+                    "Incorreta. Síndrome de Cushing paraneoplásica é por produção ectópica de ACTH.",
+                    "Correta. Sintomas neurológicos sem metástases, causados por autoanticorpos contra antígenos neuronais expressos pelo tumor, são característicos de Síndrome Paraneoplásica Neurológica."
+                ]
+            },
+            { // Questão 39
+                pergunta: "Um oncologista solicita um exame de sequenciamento genômico do tumor de um paciente. As fontes descrevem o sequenciamento de genoma de câncer e a identificação de mutações. Qual o principal objetivo da identificação de mutações condutoras (driver mutations) no contexto clínico moderno, conforme apresentado nos materiais?",
+                opcoes: [
+                    "Determinar a linhagem celular do tumor para nomenclatura histológica básica.",
+                    "Prever a via de disseminação metastática primária (linfática vs. hematogênica).",
+                    "Identificar alvos moleculares para terapias direcionadas e refinar o prognóstico.",
+                    "Confirmar a natureza benigna do tumor com base na ausência de mutações."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. Linhagem celular é determinada por morfologia e IHQ.",
+                    "Incorreta. Via de disseminação está mais relacionada ao tipo histológico e localização.",
+                    "Correta. A identificação de mutações condutoras visa identificar alvos para terapias direcionadas e refinar o prognóstico.",
+                    "Incorreta. Ausência de mutações em um painel limitado não confirma benignidade."
+                ]
+            },
+            { // Questão 40
+                pergunta: "Qual técnica laboratorial permite distinguir entre proliferações de células B e T monoclonais (neoplásicas) e policlonais (reativas), baseando-se na análise dos rearranjos dos genes dos receptores de antígenos, sendo útil no diagnóstico de neoplasias hematopoéticas como leucemias e linfomas?",
+                opcoes: [
+                    "Imuno-histoquímica (IHQ) para marcadores de proliferação (ex: Ki-67).",
+                    "Citometria de Fluxo para imunofenotipagem.",
+                    "Análise de PCR ou sequenciamento dos genes de receptores de antígenos (V(D)J).",
+                    "Cariotipagem para identificar aneuploidias."
+                ],
+                correta: 2,
+                justificativas: [
+                    "Incorreta. IHQ para Ki-67 indica proliferação, mas não distingue monoclonalidade de policlonalidade.",
+                    "Incorreta. Citometria de fluxo caracteriza o tipo celular, mas a análise de clonalidade V(D)J é por PCR/sequenciamento.",
+                    "Correta. Análise de PCR ou sequenciamento dos rearranjos dos genes de receptores de antígenos (V(D)J) permite distinguir proliferações monoclonais (neoplásicas) de policlonais (reativas).",
+                    "Incorreta. Cariotipagem identifica alterações cromossômicas, não clonalidade baseada em rearranjos V(D)J."
+                ]
+            }
+        ];
+
+
+        let indiceAtual;
+        let statusQuestoes;
+        let respostasUsuario;
+
+        function inicializarVariaveisQuiz() {
+            indiceAtual = 0;
+            statusQuestoes = Array(questoes.length).fill(null);
+            respostasUsuario = Array(questoes.length).fill(null);
+        }
+
+        function salvarProgresso() {
+            const progresso = {
+                indiceAtual,
+                statusQuestoes,
+                respostasUsuario
+            };
+            localStorage.setItem(CHAVE_PROCESSO, JSON.stringify(progresso));
+        }
+
+        function carregarProgresso() {
+            const progressoSalvo = localStorage.getItem(CHAVE_PROCESSO);
+            if (progressoSalvo) {
+                try {
+                    const dados = JSON.parse(progressoSalvo);
+                    if (dados && typeof dados.indiceAtual === 'number' &&
+                        Array.isArray(dados.statusQuestoes) && dados.statusQuestoes.length === questoes.length &&
+                        Array.isArray(dados.respostasUsuario) && dados.respostasUsuario.length === questoes.length) {
+
+                        indiceAtual = dados.indiceAtual;
+                        statusQuestoes = dados.statusQuestoes;
+                        respostasUsuario = dados.respostasUsuario;
+
+                         if (statusQuestoes.every(s => s !== null) && indiceAtual >= questoes.length -1 ) {
+                            if (statusQuestoes[questoes.length -1] !== null || indiceAtual >= questoes.length) {
+                                mostrarTelaDesempenho();
+                                return true;
+                            }
+                        }
+                        return false;
+                    } else {
+                        console.warn('Progresso salvo é de uma versão diferente do quiz ou está corrompido. Resetando.');
+                        localStorage.removeItem(CHAVE_PROCESSO);
+                        inicializarVariaveisQuiz();
+                    }
+                } catch (error) {
+                    console.error('Erro ao parsear progresso salvo:', error);
+                    localStorage.removeItem(CHAVE_PROCESSO);
+                    inicializarVariaveisQuiz();
+                }
+            } else {
+                inicializarVariaveisQuiz();
+            }
+            return false;
+        }
+
+        function mostrarConfirmacaoCustomizada(mensagem, callbackConfirmacao) {
+            const modalExistente = document.getElementById('custom-confirm-modal');
+            if (modalExistente) {
+                modalExistente.remove();
+            }
+
+            const overlay = document.createElement('div');
+            overlay.id = 'custom-confirm-modal';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '2000';
+
+            const modalContent = document.createElement('div');
+            modalContent.style.backgroundColor = 'var(--branco)';
+            modalContent.style.padding = '25px';
+            modalContent.style.borderRadius = '8px';
+            modalContent.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+            modalContent.style.textAlign = 'center';
+            modalContent.style.maxWidth = '300px';
+
+            const pMensagem = document.createElement('p');
+            pMensagem.textContent = mensagem;
+            pMensagem.style.marginBottom = '20px';
+            pMensagem.style.fontSize = '1.1em';
+            pMensagem.style.color = 'var(--cor-texto)';
+
+            const btnContainer = document.createElement('div');
+            btnContainer.style.display = 'flex';
+            btnContainer.style.justifyContent = 'space-around';
+
+            const btnConfirmar = document.createElement('button');
+            btnConfirmar.textContent = 'Confirmar';
+            btnConfirmar.style.padding = '10px 18px';
+            btnConfirmar.style.backgroundColor = 'var(--vermelho-errado)';
+            btnConfirmar.style.color = 'var(--branco)';
+            btnConfirmar.style.border = 'none';
+            btnConfirmar.style.borderRadius = '5px';
+            btnConfirmar.style.cursor = 'pointer';
+            btnConfirmar.style.fontSize = '0.9em';
+
+            const btnCancelar = document.createElement('button');
+            btnCancelar.textContent = 'Cancelar';
+            btnCancelar.style.padding = '10px 18px';
+            btnCancelar.style.backgroundColor = 'var(--cor-secundaria)';
+            btnCancelar.style.color = 'var(--cor-texto)';
+            btnCancelar.style.border = '1px solid var(--cor-secundaria)';
+            btnCancelar.style.borderRadius = '5px';
+            btnCancelar.style.cursor = 'pointer';
+            btnCancelar.style.fontSize = '0.9em';
+
+            btnConfirmar.onclick = () => {
+                overlay.remove();
+                callbackConfirmacao(true);
+            };
+            btnCancelar.onclick = () => {
+                overlay.remove();
+                callbackConfirmacao(false);
+            };
+
+            btnContainer.appendChild(btnCancelar);
+            btnContainer.appendChild(btnConfirmar);
+            modalContent.appendChild(pMensagem);
+            modalContent.appendChild(btnContainer);
+            overlay.appendChild(modalContent);
+            document.body.appendChild(overlay);
+        }
+
+
+        function limparProgressoEresetarQuiz() {
+            mostrarConfirmacaoCustomizada("Tem certeza que deseja limpar todo o progresso e recomeçar o quiz?", (confirmado) => {
+                if (confirmado) {
+                    localStorage.removeItem(CHAVE_PROCESSO);
+                    inicializarVariaveisQuiz();
+                    painelAccordion.style.maxHeight = null;
+                    btnAccordion.classList.remove('active');
+                    containerQuiz.style.display = 'block';
+                    containerPontuacaoFinal.style.display = 'none';
+                    containerNavegacao.style.display = 'flex';
+                    renderizarQuestao(indiceAtual);
+                    renderizarNavInferior();
+                    renderizarBarraNavegacaoQuestoes();
+
+                    const feedbackLimpeza = document.createElement('div');
+                    feedbackLimpeza.textContent = 'Progresso limpo e quiz reiniciado!';
+                    feedbackLimpeza.style.position = 'fixed';
+                    feedbackLimpeza.style.bottom = '20px';
+                    feedbackLimpeza.style.left = '50%';
+                    feedbackLimpeza.style.transform = 'translateX(-50%)';
+                    feedbackLimpeza.style.backgroundColor = 'var(--azul-escuro)';
+                    feedbackLimpeza.style.color = 'var(--branco)';
+                    feedbackLimpeza.style.padding = '10px 20px';
+                    feedbackLimpeza.style.borderRadius = '5px';
+                    feedbackLimpeza.style.zIndex = '2001';
+                    document.body.appendChild(feedbackLimpeza);
+                    setTimeout(() => feedbackLimpeza.remove(), 3000);
+                }
+            });
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function renderizarQuestao(indice) {
+            if (indice < 0 || indice >= questoes.length) return;
+
+            const questaoAtual = questoes[indice];
+            const card = containerQuiz.querySelector('.card');
+
+            card.style.animation = 'none';
+            void card.offsetWidth;
+            card.style.animation = 'fadeInSlideUp 0.5s ease-out forwards';
+
+            elementoPergunta.textContent = `(${indice + 1}/${questoes.length}) ${questaoAtual.pergunta}`;
+            containerOpcoes.innerHTML = '';
+            elementoFeedback.textContent = '';
+            elementoFeedback.className = '';
+
+            let containerJustificativas = painelAccordion.querySelector('.justificativa-content');
+            if (!containerJustificativas) {
+                painelAccordion.innerHTML = '';
+                containerJustificativas = document.createElement('div');
+                containerJustificativas.className = 'justificativa-content';
+                painelAccordion.appendChild(containerJustificativas);
+            }
+            containerJustificativas.innerHTML = '';
+
+            painelAccordion.style.maxHeight = null;
+            btnAccordion.classList.remove('active');
+            btnAccordion.style.display = 'none';
+
+            const respondida = statusQuestoes[indice] !== null;
+
+            // Armazenar o índice correto original antes de embaralhar
+            const originalCorrectIndex = questaoAtual.correta;
+
+            // Criar array combinado de opções e justificativas se ainda não foi feito ou se não estamos apenas recarregando uma questão respondida
+            // A condição `!questaoAtual.opcoesEmbaralhadas` garante que o embaralhamento ocorra apenas uma vez por questão.
+            if (!respondida || !questaoAtual.opcoesEmbaralhadas) {
+                let opcoesComJustificativas = questaoAtual.opcoes.map((opcao, idx) => ({
+                    opcaoTexto: opcao,
+                    justificativaTexto: questaoAtual.justificativas[idx],
+                    originalIndex: idx
+                }));
+                shuffleArray(opcoesComJustificativas);
+                questaoAtual.opcoesEmbaralhadas = opcoesComJustificativas;
+                // Atualizar questaoAtual.correta para o novo índice da opção correta no array embaralhado
+                questaoAtual.correta = questaoAtual.opcoesEmbaralhadas.findIndex(opt => opt.originalIndex === originalCorrectIndex);
+            }
+
+            const opcoesParaRenderizar = questaoAtual.opcoesEmbaralhadas;
+
+            opcoesParaRenderizar.forEach((item, i) => {
+                const botao = document.createElement('button');
+                botao.textContent = String.fromCharCode(65 + i) + ") " + item.opcaoTexto;
+                botao.disabled = respondida;
+                botao.addEventListener('click', () => validarResposta(i));
+
+                if (respondida) {
+                    // Se a questão foi respondida, aplicar estilos com base na resposta do usuário e na correção
+                    if (i === respostasUsuario[indice]) { // Opção que o usuário selecionou
+                        botao.style.backgroundImage = 'none';
+                        botao.style.backgroundColor = statusQuestoes[indice] ? 'var(--verde-certo)' : 'var(--vermelho-errado)';
+                        botao.style.color = 'var(--branco)';
+                        botao.style.fontWeight = 'bold';
+                    }
+                    // Se o usuário errou, e esta é a opção correta, destacá-la também
+                    if (item.originalIndex === originalCorrectIndex && !statusQuestoes[indice] && i !== respostasUsuario[indice]) {
+                        botao.style.backgroundImage = 'none';
+                        botao.style.backgroundColor = 'var(--verde-certo)';
+                        botao.style.color = 'var(--branco)';
+                        botao.style.opacity = '0.85';
+                    }
+                }
+                containerOpcoes.appendChild(botao);
+            });
+
+            if (respondida) {
+                btnAccordion.style.display = 'block';
+                elementoFeedback.textContent = statusQuestoes[indice] ? "Correto!" : "Errado!";
+                elementoFeedback.classList.add(statusQuestoes[indice] ? "correto" : "errado");
+
+                const containerJustificativasInterno = painelAccordion.querySelector('.justificativa-content');
+                // Usar opcoesEmbaralhadas para mostrar justificativas na ordem em que as opções foram apresentadas
+                opcoesParaRenderizar.forEach((item, i) => {
+                    const letraOpcao = String.fromCharCode(65 + i);
+
+                    const pJustificativa = document.createElement('p');
+                    pJustificativa.classList.add('justificativa-item');
+                    // Usar item.justificativaTexto do array embaralhado
+                    pJustificativa.innerHTML = `<strong>${letraOpcao})</strong> ${item.justificativaTexto}`;
+
+                    // A classe 'certa' é baseada no originalIndex
+                    if (item.originalIndex === originalCorrectIndex) {
+                        pJustificativa.classList.add('certa');
+                    } else {
+                        pJustificativa.classList.add('errada');
+                    }
+                    containerJustificativasInterno.appendChild(pJustificativa);
+                });
+            }
+
+            btnPularQuestao.style.display = respondida ? 'none' : 'block';
+            btnPularQuestao.disabled = respondida;
+        }
+
+        function validarResposta(indiceOpcaoSelecionada) {
+            // indiceOpcaoSelecionada é o índice da opção no array embaralhado (opcoesEmbaralhadas)
+            if (statusQuestoes[indiceAtual] !== null) return;
+
+            const questaoAtual = questoes[indiceAtual];
+            respostasUsuario[indiceAtual] = indiceOpcaoSelecionada;
+
+            // questaoAtual.correta já foi atualizado em renderizarQuestao para ser o índice correto no array embaralhado
+            const acertou = indiceOpcaoSelecionada === questaoAtual.correta;
+            statusQuestoes[indiceAtual] = acertou;
+
+            renderizarQuestao(indiceAtual); // Re-renderiza para mostrar feedback e justificativas
+            renderizarNavInferior();
+            renderizarBarraNavegacaoQuestoes();
+            salvarProgresso();
+
+            if (statusQuestoes.every(s => s !== null)) {
+                setTimeout(mostrarTelaDesempenho, 1500);
+            }
+        }
+
+        function pularQuestao() {
+            if (statusQuestoes[indiceAtual] === null) {
+            }
+
+            if (indiceAtual < questoes.length - 1) {
+                indiceAtual++;
+                renderizarQuestao(indiceAtual);
+                renderizarNavInferior();
+                renderizarBarraNavegacaoQuestoes();
+                salvarProgresso();
+            } else {
+                mostrarTelaDesempenho();
+            }
+        }
+
+        function mostrarTelaDesempenho() {
+            containerQuiz.style.display = 'none';
+            containerNavegacao.style.display = 'none';
+            btnPularQuestao.style.display = 'none';
+
+            const acertos = statusQuestoes.filter(s => s === true).length;
+            elementoPontos.textContent = `${acertos} de ${questoes.length}`;
+            containerPontuacaoFinal.style.display = 'block';
+
+            const cardPontuacao = containerPontuacaoFinal.querySelector('.card');
+            cardPontuacao.style.animation = 'none';
+            void cardPontuacao.offsetWidth;
+            cardPontuacao.style.animation = 'fadeInSlideUp 0.5s ease-out forwards';
+
+            const oldBtn = cardPontuacao.querySelector('button');
+            if(oldBtn) oldBtn.remove();
+
+            const btnReiniciarQuizDesempenho = document.createElement('button');
+            btnReiniciarQuizDesempenho.textContent = "Reiniciar Quiz";
+            btnReiniciarQuizDesempenho.addEventListener('click', limparProgressoEresetarQuiz);
+            cardPontuacao.appendChild(btnReiniciarQuizDesempenho);
+
+            renderizarBarraNavegacaoQuestoes();
+        }
+
+
+        function renderizarNavInferior() {
+            containerNavegacao.style.display = 'flex';
+            btnAnterior.disabled = indiceAtual === 0;
+
+            const todasRespondidas = statusQuestoes.every(s => s !== null);
+
+            if (todasRespondidas) {
+                btnProxima.textContent = "Ver Desempenho";
+                btnProxima.disabled = false;
+            } else {
+                btnProxima.textContent = "Próxima";
+                if (statusQuestoes[indiceAtual] !== null) {
+                    btnProxima.disabled = indiceAtual === questoes.length - 1;
+                } else {
+                    btnProxima.disabled = false;
+                    if (indiceAtual === questoes.length -1) {
+                        btnProxima.disabled = true;
+                    }
+                }
+            }
+            if (indiceAtual === questoes.length - 1 && statusQuestoes[indiceAtual] !== null) {
+                btnProxima.textContent = "Ver Desempenho";
+                btnProxima.disabled = false;
+            }
+        }
+
+
+        function navegarProxima() {
+            const todasRespondidas = statusQuestoes.every(s => s !== null);
+            if (todasRespondidas || (indiceAtual === questoes.length - 1 && statusQuestoes[indiceAtual] !== null)) {
+                mostrarTelaDesempenho();
+            } else if (indiceAtual < questoes.length - 1) {
+                indiceAtual++;
+                renderizarQuestao(indiceAtual);
+                renderizarNavInferior();
+                renderizarBarraNavegacaoQuestoes();
+                salvarProgresso();
+            }
+        }
+
+        function navegarAnterior() {
+            if (indiceAtual > 0) {
+                indiceAtual--;
+                renderizarQuestao(indiceAtual);
+                renderizarNavInferior();
+                renderizarBarraNavegacaoQuestoes();
+                salvarProgresso();
+            }
+        }
+
+        function renderizarBarraNavegacaoQuestoes() {
+            const navContainer = document.querySelector('.bottom-nav');
+            navContainer.innerHTML = '';
+
+            questoes.forEach((_, i) => {
+                const btnQuestao = document.createElement('button');
+                btnQuestao.textContent = `${i + 1}`;
+                btnQuestao.title = `Ir para Questão ${i + 1}`;
+
+                if (i === indiceAtual && containerQuiz.style.display !== 'none') {
+                    btnQuestao.classList.add('atual');
+                }
+                if (statusQuestoes[i] === true) {
+                    btnQuestao.classList.add('certo');
+                } else if (statusQuestoes[i] === false) {
+                    btnQuestao.classList.add('errado');
+                }
+
+                btnQuestao.addEventListener('click', () => {
+                    if (containerPontuacaoFinal.style.display === 'block') {
+                        containerPontuacaoFinal.style.display = 'none';
+                        containerQuiz.style.display = 'block';
+                        containerNavegacao.style.display = 'flex';
+                    }
+                    indiceAtual = i;
+                    renderizarQuestao(indiceAtual);
+                    renderizarNavInferior();
+                    renderizarBarraNavegacaoQuestoes();
+                    salvarProgresso();
+                });
+                navContainer.appendChild(btnQuestao);
+            });
+        }
+
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const desempenhoMostradoAoCarregar = carregarProgresso();
+            if (!desempenhoMostradoAoCarregar) {
+                renderizarQuestao(indiceAtual);
+                renderizarNavInferior();
+            }
+            renderizarBarraNavegacaoQuestoes();
+        });
+
+        btnAnterior.addEventListener('click', navegarAnterior);
+        btnProxima.addEventListener('click', navegarProxima);
+        btnReiniciar.addEventListener('click', limparProgressoEresetarQuiz);
+        btnPularQuestao.addEventListener('click', pularQuestao);
+        btnLimparProgresso.addEventListener('click', limparProgressoEresetarQuiz);
+
+        btnAccordion.addEventListener('click', () => {
+            btnAccordion.classList.toggle('active');
+            if (painelAccordion.style.maxHeight && painelAccordion.style.maxHeight !== "0px") {
+                painelAccordion.style.maxHeight = null;
+            } else {
+                painelAccordion.style.maxHeight = (painelAccordion.scrollHeight + 20) + "px";
+            }
+        });
+
+    </script>
+</body>
+</html>
